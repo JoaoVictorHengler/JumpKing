@@ -1762,6 +1762,7 @@ class Screen {
         canvas.parent('canvas');
         this.width = canvas.width;
         this.height = canvas.height - 50;
+        return canvas
     }
 
     createPlayer() {

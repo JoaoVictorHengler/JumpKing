@@ -187,9 +187,7 @@ class Player {
 
         this.playersDead = false;
 
-
         this.previousSpeed = createVector(0, 0);
-
 
         this.bestHeightReached = 0;
         this.bestLevelReached = 0;
@@ -605,7 +603,8 @@ class Player {
             return
         } */
         
-        console.log("Estado do jogador: " + this.state)
+        console.log("Estado do jogador: ")
+        console.log(this.state)
         if (!this.facingRight) {
             push()
             scale(-1, 1);
@@ -792,7 +791,7 @@ class Player {
         } else if (this.isRunning || this.state == 'runCycle1' || this.state == 'runCycle2' || this.state == 'runCycle3') {
             this.currentRunIndex += 1;
             if (this.currentRunIndex >= this.runCycle.length) this.currentRunIndex = 0;
-            this.state = String((this.runCycle[this.currentRunIndex]))
+            this.state = String((this.runCycle[this.currentRunIndex])) /* Erro aqui ao andar */
             return (this.runCycle[this.currentRunIndex])
         } else if (this.isOnGround || this.state == 'idleImage') {
             this.state = 'idleImage';
