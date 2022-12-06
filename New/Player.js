@@ -43,7 +43,7 @@ class PlayerState {
         this.isWaitingToStartAction = false;
         this.actionStarted = false;
 
-        
+
     }
     // Obter estado do player
     getStateFromPlayer(player) {
@@ -128,18 +128,20 @@ class PlayerState {
         // clone.actionStarted = this.actionStarted;
         return clone;
     }
-
-
 }
 
 class Player {
 
     // Construtor player
-    constructor(name) {
+    constructor(name, images, sounds, isSinglePlayer) {
+        this.name = name;
+        this.images = images;
+        this.sounds = sounds;
+
         this.width = 50;
         this.height = 65;
 
-        this.currentPos = createVector(width / 2, height - 200); 
+        this.currentPos = createVector(width / 2, height - 200);
         this.currentSpeed = createVector(0, 0);
         this.isOnGround = false;
 
@@ -154,7 +156,21 @@ class Player {
         this.isRunning = false;
         this.isSlidding = false;
         this.currentRunIndex = 1;
-        this.runCycle = [run1Image, run1Image, run1Image, run1Image, run1Image, run1Image, run1Image, run1Image, run1Image, run1Image, run1Image, run1Image, run1Image, run2Image, run2Image, run2Image, run2Image, run2Image, run2Image, run3Image, run3Image, run3Image, run3Image, run3Image, run3Image, run3Image, run3Image, run3Image, run3Image, run3Image, run3Image, run3Image, run2Image, run2Image, run2Image, run2Image, run2Image, run2Image]
+        this.runCycle = [
+            this.images.run1Image, this.images.run1Image, this.images.run1Image,
+            this.images.run1Image, this.images.run1Image, this.images.run1Image,
+            this.images.run1Image, this.images.run1Image, this.images.run1Image,
+            this.images.run1Image, this.images.run1Image, this.images.run1Image,
+            this.images.run1Image, this.images.run2Image, this.images.run2Image,
+            this.images.run2Image, this.images.run2Image, this.images.run2Image,
+            this.images.run2Image, this.images.run3Image, this.images.run3Image,
+            this.images.run3Image, this.images.run3Image, this.images.run3Image,
+            this.images.run3Image, this.images.run3Image, this.images.run3Image,
+            this.images.run3Image, this.images.run3Image, this.images.run3Image,
+            this.images.run3Image, this.images.run3Image, this.images.run2Image,
+            this.images.run2Image, this.images.run2Image, this.images.run2Image,
+            this.images.run2Image, this.images.run2Image
+        ]
         this.sliddingRight = false;
 
         // this.currentLevel = null;
@@ -180,11 +196,8 @@ class Player {
         this.bestLevelReached = 0;
         this.reachedHeightAtStepNo = 0;
         this.bestLevelReachedOnActionNo = 0;
-        //
-        // this.jumpSound = loadSound('sounds/jump.mp3')
-        // this.fallSound = loadSound('sounds/fall.mp3')
-        // bumpSound = loadSound('sounds/bump.mp3')
-        // landSound = loadSound('sounds/land.mp3')
+        
+        this.isSinglePlayer = isSinglePlayer;
 
         this.hasFinishedInstructions = false;
         this.fellToPreviousLevel = false;
@@ -263,22 +276,22 @@ class Player {
 
     }
     // Atualizar Jogador
-    Update() {
+    Update(levels) {
         if (this.playersDead)//|| this.hasFinishedInstructions)
             return;
         let currentLines = levels[this.currentLevelNo].lines;
         this.UpdatePlayerSlide(currentLines);
         this.ApplyGravity()
-        this.ApplyBlizzardForce();
-        this.UpdatePlayerRun(currentLines);
+        this.ApplyBlizzardForce(levels);
+        this.UpdatePlayerRun(currentLines, levels);
         this.currentPos.add(this.currentSpeed);
         this.previousSpeed = this.currentSpeed.copy();
 
         this.currentNumberOfCollisionChecks = 0;
-        this.CheckCollisions(currentLines)
+        this.CheckCollisions(currentLines, levels)
         this.UpdateJumpTimer()
         this.CheckForLevelChange();
-        this.CheckForCoinCollisions();
+        this.CheckForCoinCollisions(levels);
 
         if (this.getNewPlayerStateAtEndOfUpdate) {
             if (this.currentLevelNo !== 37) {
@@ -305,7 +318,7 @@ class Player {
         }
     }
     // Aplicar força da nevasca
-    ApplyBlizzardForce() {
+    ApplyBlizzardForce(levels) {
         // if(!levels[this.currentLevelNo].isBlizzardLevel)
         //     return;
 
@@ -335,7 +348,7 @@ class Player {
 
     }
     // Verificar Colisões
-    CheckCollisions(currentLines) {
+    CheckCollisions(currentLines, levels) {
 
         let collidedLines = [];
         for (let i = 0; i < currentLines.length; i++) {
@@ -372,7 +385,7 @@ class Player {
                     // print("potentail landing on nooooooo")
 
                 } else {
-                    this.playerLanded();
+                    this.playerLanded(levels);
                 }
 
             } else {
@@ -382,8 +395,8 @@ class Player {
                 // ok we gonna need to snap this shit
                 this.currentPos.y = chosenLine.y1;
                 if (!this.isClone) {
-                    bumpSound.playMode('sustain');
-                    bumpSound.play();
+                    this.sounds.bumpSound.playMode('sustain');
+                    this.sounds.bumpSound.play();
                 }
 
             }
@@ -410,8 +423,8 @@ class Player {
             if (!this.isOnGround) {
                 this.hasBumped = true;
                 if (!this.isClone) {
-                    bumpSound.playMode('sustain');
-                    bumpSound.play();
+                    this.sounds.bumpSound.playMode('sustain');
+                    this.sounds.bumpSound.play();
                 }
             }
         } else {
@@ -566,45 +579,39 @@ class Player {
         return (this.bestHeightReached - (height * this.bestLevelReached));
     }
     // Mostrar Jogador
-    Show() {
+    async Show(levels) {
         if (this.playersDead)
             return;
         push();
 
         //if on the previous level and is up the top, then show
-       /*  if (!replayingBestPlayer) {
-            if (this.currentLevelNo === population.showingLevelNo - 1) {
-                if (this.currentPos.y < this.height) {
-                    translate(0, height);
-
-                } else {
-                    pop();
-                    return;
-                }
-            }
-        } */
+        /*  if (!replayingBestPlayer) {
+             if (this.currentLevelNo === population.showingLevelNo - 1) {
+                 if (this.currentPos.y < this.height) {
+                     translate(0, height);
+ 
+                 } else {
+                     pop();
+                     return;
+                 }
+             }
+         } */
 
 
         translate(this.currentPos.x, this.currentPos.y);
 
-        // if (this.jumpHeld) {
-        //     // this.height = this.height / 2
-        //     // translate(0, this.height)
-        //     image(squatImage,-20,-35 );
-        //
-        // }else{
-
-
-        let imageToUse = this.GetImageToUseBasedOnState();
-        if (player.currentLevelNo != this.currentLevelNo) {
+        let imageToUse = await this.GetImageToUseBasedOnState();
+        /* if (player.currentLevelNo != this.currentLevelNo) {
             return
-        }
+        } */
+        
+        
         if (!this.facingRight) {
             push()
             scale(-1, 1);
             if (this.hasBumped) {
                 image(imageToUse, -70, -30);
-            } else if (imageToUse == jumpImage || imageToUse == fallImage) {
+            } else if (imageToUse == this.images.jumpImage || imageToUse == this.images.fallImage) {
                 image(imageToUse, -70, -28);
             } else {
                 image(imageToUse, -70, -35);
@@ -614,7 +621,7 @@ class Player {
 
             if (this.hasBumped) {
                 image(imageToUse, -20, -30);
-            } else if (imageToUse == jumpImage || imageToUse == fallImage) {
+            } else if (imageToUse == this.images.jumpImage || imageToUse == this.images.fallImage) {
                 image(imageToUse, -20, -28);
             } else {
                 image(imageToUse, -20, -35);
@@ -637,7 +644,7 @@ class Player {
 
 
         //show snow
-        if (levels[this.currentLevelNo].isBlizzardLevel && (!alreadyShowingSnow||testingSinglePlayer)) {
+        if (levels[this.currentLevelNo].isBlizzardLevel && (!alreadyShowingSnow || this.isSinglePlayer)) {
 
             let snowDrawPosition = this.snowImagePosition;
             while (snowDrawPosition <= 0) {
@@ -679,8 +686,8 @@ class Player {
         this.jumpTimer = 0
         this.jumpStartingHeight = (height - this.currentPos.y) + height * this.currentLevelNo;
         if (!this.isClone) {
-            jumpSound.playMode('sustain');
-            jumpSound.play();
+            this.sounds.jumpSound.playMode('sustain');
+            this.sounds.jumpSound.play();
         }
     }
     // Colisão
@@ -769,40 +776,31 @@ class Player {
         return this.currentSpeed.x > 0;
     }
     // Pegar imagem baseada no estado do Jogador
-    GetImageToUseBasedOnState() { // Arrumar aqui
-
+    GetImageToUseBasedOnState() {
         if ((this.jumpHeld && this.isOnGround) || this.state == 'squatImage') {
             this.state = 'squatImage';
-            return squatImage;
-        }
-        if (this.hasFallen || this.state == 'fallenImage') {
+            return this.images.squatImage;
+        } else if (this.hasFallen || this.state == 'fallenImage') {
             this.state = 'fallenImage';
-            return fallenImage;
-        }
-        if (this.hasBumped || this.state == 'oofImage') 
-        {
+            return this.images.fallenImage;
+        } else if (this.hasBumped || this.state == 'oofImage') {
             this.state = 'oofImage';
-            return oofImage;
-        }
-        if (this.currentSpeed.y < 0 || this.state == 'jumpImage') {
+            return this.images.oofImage;
+        } else if (this.currentSpeed.y < 0 || this.state == 'jumpImage') {
             this.state = 'jumpImage';
-            return jumpImage;
-        }
-        if (this.isRunning || this.state == 'runCycle1' || this.state == 'runCycle2' || this.state == 'runCycle3') {
+            return this.images.jumpImage;
+        } else if (this.isRunning || this.state == 'runCycle1' || this.state == 'runCycle2' || this.state == 'runCycle3') {
             this.currentRunIndex += 1;
             if (this.currentRunIndex >= this.runCycle.length) this.currentRunIndex = 0;
             this.state = String((this.runCycle[this.currentRunIndex]))
             return (this.runCycle[this.currentRunIndex])
-
-        }
-
-        if (this.isOnGround || this.state == 'idleImage') {
+        } else if (this.isOnGround || this.state == 'idleImage') {
             this.state = 'idleImage';
-            return idleImage;
+            return this.images.idleImage;
+        } else {
+            this.state = 'fallImage';
+            return this.images.fallImage;
         }
-
-        this.state = 'fallImage';
-        return fallImage;
     }
 
     UpdatePlayerSlide(currentLines) {
@@ -815,7 +813,7 @@ class Player {
 
     }
 
-    UpdatePlayerRun(currentLines) {
+    UpdatePlayerRun(currentLines, levels) {
         this.isRunning = false;
         let runAllowed = (!levels[this.currentLevelNo].isBlizzardLevel || this.currentLevelNo === 31 || this.currentLevelNo == 25);
         if (this.isOnGround) {
@@ -1103,7 +1101,7 @@ class Player {
     }
 
     CheckForLevelChange() {
-        if (this.currentPos.y < -this.height ) {
+        if (this.currentPos.y < -this.height) {
             //we are at the top of the screen
             this.currentLevelNo += 1;
             this.currentPos.y += height;
@@ -1126,13 +1124,13 @@ class Player {
             }
 
         }
-        
+
 
 
     }
 
     StartCurrentAction() {
-       
+
         if (this.currentAction.isJump) {
             this.jumpHeld = true;
         }
@@ -1161,7 +1159,7 @@ class Player {
         return (height - this.currentPos.y) + height * this.currentLevelNo
     }
 
-    playerLanded() {
+    playerLanded(levels) {
 
         // if moving down then weve landed
         this.isOnGround = true
@@ -1200,7 +1198,7 @@ class Player {
                 //setup coins
                 this.numberOfCoinsPickedUp = 0;
                 this.progressionCoinPickedUp = false;
-                if(!levels[this.currentLevelNo].hasProgressionCoins){
+                if (!levels[this.currentLevelNo].hasProgressionCoins) {
                     this.progressionCoinPickedUp = true;
 
                 }
@@ -1220,16 +1218,16 @@ class Player {
 
         if (!this.isClone) {
             if (this.hasFallen) {
-                fallSound.playMode('sustain');
-                fallSound.play();
+                this.sounds.fallSound.playMode('sustain');
+                this.sounds.fallSound.play();
             } else {
-                landSound.playMode('sustain');
-                landSound.play();
+                this.sounds.landSound.playMode('sustain');
+                this.sounds.landSound.play();
             }
         }
     }
 
-    CheckForCoinCollisions() {
+    CheckForCoinCollisions(levels) {
         if (this.currentLevelNo < this.bestLevelReached) {
             return;
         }
