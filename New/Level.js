@@ -12,7 +12,7 @@ class Level{
         push();
         image(this.levelImage,0,0)
         if(showingLines){
-            for(let l of lines){
+            for(let l of this.lines){
                 l.Show();
             }
         }

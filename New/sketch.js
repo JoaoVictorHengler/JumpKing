@@ -4,10 +4,11 @@ let previousFrameRate = 60;
 async function setup() {
     await screen.loadScreenResources();
     await screen.setupCanvas(1200, 950);
+    await screen.setupLevels();
     await screen.createPlayer();
     await screen.createPopulation();
-    await screen.setupLevels();
-    await screen.playSounds();
+    
+    await screen.setPlayModeSounds();
 }
 
 function draw() {
@@ -15,9 +16,9 @@ function draw() {
 }
 
 function keyPressed() {
-    screen.keyPressed();
+    screen.keyPressed(key);
 }
 
 function keyReleased() {
-    screen.keyReleased();
+    screen.keyReleased(key, keyCode);
 }

@@ -17,7 +17,7 @@ let playerIceRunAcceleration = 0.2;
 let mutePlayers = true;
 
 class PlayerState {
-    constructor() {
+    constructor(width, height) {
         this.currentPos = createVector(width / 2, height - 200); // this is the top left corner of the hitbox
         this.currentSpeed = createVector(0, 0);
         this.isOnGround = false;
@@ -141,7 +141,7 @@ class Player {
         this.width = 50;
         this.height = 65;
 
-        this.currentPos = createVector(width / 2, height - 200);
+        this.currentPos = 0;
         this.currentSpeed = createVector(0, 0);
         this.isOnGround = false;
 
@@ -149,7 +149,6 @@ class Player {
         this.jumpTimer = 0;
         this.leftHeld = false;
         this.rightHeld = false;
-
 
         this.facingRight = true;
         this.hasBumped = false;
@@ -202,7 +201,7 @@ class Player {
         this.hasFinishedInstructions = false;
         this.fellToPreviousLevel = false;
         this.fellOnActionNo = 0;
-        this.playerStateAtStartOfBestLevel = new PlayerState();
+        
         this.getNewPlayerStateAtEndOfUpdate = false;
 
 
@@ -217,9 +216,14 @@ class Player {
         this.state;
 
     }
+    setPlayerPos(width, height) {
+        this.currentPos = createVector(width / 2, height - 200)
+        this.playerStateAtStartOfBestLevel = new PlayerState(width, height);
+    }
+
     // Resetar jogador
-    ResetPlayer() {
-        this.currentPos = createVector(width / 2, height - 200); // this is the top left corner of the hitbox
+    ResetPlayer(width, height) {
+        setPlayerPos(width, height) // this is the top left corner of the hitbox
         this.currentSpeed = createVector(0, 0);
         this.isOnGround = false;
 
@@ -254,7 +258,6 @@ class Player {
 
         this.currentAction = null;
 
-        this.playersDead = false;
         this.previousSpeed = createVector(0, 0)
         this.bestHeightReached = 0;
         this.reachedHeightAtStepNo = 0;
@@ -277,8 +280,7 @@ class Player {
     }
     // Atualizar Jogador
     Update(levels) {
-        if (this.playersDead)//|| this.hasFinishedInstructions)
-            return;
+
         let currentLines = levels[this.currentLevelNo].lines;
         this.UpdatePlayerSlide(currentLines);
         this.ApplyGravity()
@@ -558,7 +560,7 @@ class Player {
             this.currentNumberOfCollisionChecks += 1;
             if (this.currentNumberOfCollisionChecks > this.maxCollisionChecks) {
                 this.hasFinishedInstructions = true;
-                this.playersDead = true;
+
             } else {
                 this.CheckCollisions(currentLines);
             }
@@ -580,8 +582,6 @@ class Player {
     }
     // Mostrar Jogador
     async Show(levels) {
-        if (this.playersDead)
-            return;
         push();
 
         //if on the previous level and is up the top, then show
@@ -605,7 +605,7 @@ class Player {
             return
         } */
         
-        
+        console.log("Estado do jogador: " + this.state)
         if (!this.facingRight) {
             push()
             scale(-1, 1);
@@ -1112,7 +1112,6 @@ class Player {
                 //oh no
                 // print("fuck me hes goin under")
                 this.currentLevelNo = 1; //lol fixed
-                this.playersDead = true;
                 this.hasFinishedInstructions = true;
             }
             this.currentLevelNo -= 1;

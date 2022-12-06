@@ -1702,9 +1702,11 @@ class Screen {
             run1Image: null,
             run2Image: null,
             run3Image: null,
-        }
+        };
+        this.evolationSpeed = 1;
+
         this.lines = [];
-        this.showLines = false;
+        this.showLines = true;
 
         this.coins = [];
         this.activateCoins = false;
@@ -1779,6 +1781,7 @@ class Screen {
             bumpSound: this.sounds.bumpSound,
             landSound: this.sounds.landSound,
         }, this.isSinglePlayer);
+        this.player.setPlayerPos(this.width, this.height)
         console.log("Jogador Criado.");
         /* swal.fire({
             text: "Digite o seu nick:",
@@ -1797,12 +1800,10 @@ class Screen {
 
     createPopulation() {
         this.population = new Population();
-        this.population.addPlayer();
+        this.population.addPlayer(this.player);
     }
 
     setupLevels() {
-
-
         for (let i = 0; i < levelMatrix.length; i++) {
             let tempLevel = new Level();
 
@@ -1843,7 +1844,7 @@ class Screen {
 
     }
 
-    playSounds() {
+    setPlayModeSounds() {
         Object.keys(this.sounds).forEach(
             (sound) => {
                 this.sounds[sound].playMode('sustain');
@@ -1851,29 +1852,28 @@ class Screen {
         )
     }
 
-    showLevel(player) {
-        levels[player.currentLevelNo].show(this.showLines, this.showCoins);
-    }
 
-    draw() {
+    async draw() {
         background(10);
         push()
         translate(0, 50);
         if (!this.player.isClone) {
             image(this.levels[this.player.currentLevelNo].levelImage, 0, 0)
-            this.levels[this.player.currentLevelNo].show();
+            this.levels[this.player.currentLevelNo].show(this.showLines, this.showCoins);
             this.player.Update(this.levels);
             this.player.Show(this.levels);
         }
-        pop();
 
         if (frameCount % 15 === 0) {
             previousFrameRate = floor(getFrameRate())
         }
+        pop();
+
+        
 
         fill(0);
         noStroke();
-        rect(0, 0, width, 50);
+        /* rect(0, 0, this.width, 50); */
     }
 
     /* Criar Movimentação f:keyPressed() e f:keyReleased() */
@@ -1892,41 +1892,28 @@ class Screen {
     
         switch (keyCode) {
             case LEFT_ARROW:
+                console.log("Personagem andando para o lado esquerdo")
+
                 this.player.leftHeld = true;
                 break;
-            case RIGHT_ARROW:
+                case RIGHT_ARROW:
+                console.log("Personagem andando para o lado direito")
                 this.player.rightHeld = true;
                 break;
         }
     
     }
 
-    keyReleased(key) {
+    keyReleased(key, keyCode) {
 
         switch (key) {
-            /*         case 'B':
-                        replayingBestPlayer = true;
-                        cloneOfBestPlayer = population.cloneOfBestPlayerFromPreviousGeneration.clone();
-                        evolationSpeed = 1;
-                        mutePlayers = false;
-                        break;
-            
-             */
+
             case ' ':
     
-                if (!this.creatingLines) {
-                    this.player.jumpHeld = false
-                    this.player.Jump()
-                }
+                this.player.jumpHeld = false
+                this.player.Jump()
                 break;
-            /*         case 'R':
-                        if (creatingLines) {
-                            lines = [];
-                            linesString = "";
-                            mousePos1 = null;
-                            mousePos2 = null;
-                        }
-                        break; */
+
             case 'N':
                 player.currentLevelNo += 1;
 
@@ -1938,6 +1925,25 @@ class Screen {
                     mousePos2 = null;
                 }
         }
+
+        switch (keyCode) {
+            case LEFT_ARROW:
+                this.player.leftHeld = false;
+                break;
+            case RIGHT_ARROW:
+                this.player.rightHeld = false;
+                break;
+            case DOWN_ARROW:
+                this.evolationSpeed = constrain(this.evolationSpeed - 1, 0, 50);
+                print(this.evolationSpeed)
+    
+                break;
+            case UP_ARROW:
+                this.evolationSpeed = constrain(this.evolationSpeed + 1, 0, 50);
+                print(this.evolationSpeed)
+                break;
+        }
     }
+
     /* Criar Edit Coins f:mouseClicked() */
 }
