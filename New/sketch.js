@@ -1,20 +1,20 @@
-
+var canStart = false;
 var screen = new Screen();
 var canvas = null;
-let previousFrameRate = 60;
+
 async function setup() {
     await screen.loadScreenResources();
     canvas = await screen.setupCanvas(1200, 950);
-    await screen.setupLevels();
-    await screen.createPlayer();
-    await screen.createPopulation();
-    await screen.player.ResetPlayer(screen.width, screen.height); 
-
-    await screen.setPlayModeSounds();
+    await screen.setupConnection();
 }
 
 function draw() {
-    screen.draw();
+    if (canStart) {
+        screen.draw();
+        if (!screen.isSinglePlayer) {
+            screen.updateInformationServer();
+        }
+    }
    /*  mouseClicked(); */
 }
 

@@ -17,7 +17,7 @@ let playerIceRunAcceleration = 0.2;
 let mutePlayers = true;
 
 class PlayerState {
-    constructor(width, height) {
+    constructor() {
         this.currentPos = createVector(width / 2, height - 200); // this is the top left corner of the hitbox
         this.currentSpeed = createVector(0, 0);
         this.isOnGround = false;
@@ -133,15 +133,17 @@ class PlayerState {
 class Player {
 
     // Construtor player
-    constructor(name, images, sounds, isSinglePlayer) {
-        this.name = name;
+    constructor(nick, images, sounds, isSinglePlayer) {
+        this.nick = nick;
+        this.numMultiplayer = 0;
         this.images = images;
         this.sounds = sounds;
 
         this.width = 50;
         this.height = 65;
 
-        this.currentPos = 0;
+        this.currentPos = createVector(width / 2, height - 200)
+        this.playerStateAtStartOfBestLevel = new PlayerState();
         this.currentSpeed = createVector(0, 0);
         this.isOnGround = false;
 
@@ -211,17 +213,13 @@ class Player {
         this.currentNumberOfCollisionChecks = 0;
 
         this.progressionCoinPickedUp = false;
-        this.state;
+        this.state = 'idleImage';
 
-    }
-    setPlayerPos(width, height) {
-        this.currentPos = createVector(width / 2, height - 200)
-        this.playerStateAtStartOfBestLevel = new PlayerState(width, height);
     }
 
     // Resetar jogador
     ResetPlayer(width, height) {
-        this.setPlayerPos(width, height) // this is the top left corner of the hitbox
+        this.currentPos = createVector(width / 2, height - 200) // this is the top left corner of the hitbox
         this.currentSpeed = createVector(0, 0);
         this.isOnGround = false;
 
@@ -268,7 +266,6 @@ class Player {
     }
     // Começar a carregar o melhor estado do player
     loadStartOfBestLevelPlayerState() {
-
         this.playerStateAtStartOfBestLevel.loadStateToPlayer(this);
 
     }
@@ -576,32 +573,12 @@ class Player {
         return (this.bestHeightReached - (height * this.bestLevelReached));
     }
     // Mostrar Jogador
-    async Show(levels) {
+    async setImgPlayer(levels) {
+        translate(this.currentPos.x, this.currentPos.y);
         push();
 
-        //if on the previous level and is up the top, then show
-        /*  if (!replayingBestPlayer) {
-             if (this.currentLevelNo === population.showingLevelNo - 1) {
-                 if (this.currentPos.y < this.height) {
-                     translate(0, height);
- 
-                 } else {
-                     pop();
-                     return;
-                 }
-             }
-         } */
-
-
-        translate(this.currentPos.x, this.currentPos.y);
-
         let imageToUse = await this.GetImageToUseBasedOnState();
-        /* if (player.currentLevelNo != this.currentLevelNo) {
-            return
-        } */
-        
-        console.log("Estado do jogador: ")
-        console.log(this.state)
+
         if (!this.facingRight) {
             push()
             scale(-1, 1);
@@ -624,22 +601,18 @@ class Player {
             }
 
         }
-        //
-        // fill(255, 0, 0);
-        // noFill();
-        // stroke(255,0,0);
-        // strokeWeight(2);
-        // // noStroke()
-        // rect(0, 0, this.width, this.height);
 
+        /* 
+            Player Hitbox
 
-        // if (this.jumpHeld) {
-        //     this.height = this.height * 2
-        // }
+            fill(255, 0, 0);
+            noFill();
+            stroke(255,0,0);
+            strokeWeight(2);
+            rect(0, 0, this.width, this.height);
+        */
+
         pop();
-
-
-        //show snow
         if (levels[this.currentLevelNo].isBlizzardLevel && (!alreadyShowingSnow || this.isSinglePlayer)) {
 
             let snowDrawPosition = this.snowImagePosition;
@@ -655,9 +628,9 @@ class Player {
             // image(snowImage, snowDrawPosition - width, snowYPosition- height);
             alreadyShowingSnow = true;
         }
-
-
     }
+
+
     // Pular
     Jump() {
         if (!this.isOnGround) {
@@ -773,30 +746,55 @@ class Player {
     }
     // Pegar imagem baseada no estado do Jogador
     GetImageToUseBasedOnState() {
-        if ((this.jumpHeld && this.isOnGround) || this.state == 'squatImage') {
-            this.state = 'squatImage';
-            return this.images.squatImage;
-        } else if (this.hasFallen || this.state == 'fallenImage') {
-            this.state = 'fallenImage';
-            return this.images.fallenImage;
-        } else if (this.hasBumped || this.state == 'oofImage') {
-            this.state = 'oofImage';
-            return this.images.oofImage;
-        } else if (this.currentSpeed.y < 0 || this.state == 'jumpImage') {
-            this.state = 'jumpImage';
-            return this.images.jumpImage;
-        } else if (this.isRunning || this.state == 'runCycle1' || this.state == 'runCycle2' || this.state == 'runCycle3') {
-            this.currentRunIndex += 1;
-            if (this.currentRunIndex >= this.runCycle.length) this.currentRunIndex = 0;
-            this.state = String((this.runCycle[this.currentRunIndex])) /* Erro aqui ao andar */
-            return (this.runCycle[this.currentRunIndex])
-        } else if (this.isOnGround || this.state == 'idleImage') {
-            this.state = 'idleImage';
-            return this.images.idleImage;
+        if (!this.isClone) {
+            if (this.jumpHeld && this.isOnGround) {
+                this.state = 'squatImage';
+                return this.images.squatImage;
+            } else if (this.hasFallen) {
+                this.state = 'fallenImage';
+                return this.images.fallenImage;
+            } else if (this.hasBumped) {
+                this.state = 'oofImage';
+                return this.images.oofImage;
+            } else if (this.currentSpeed.y < 0) {
+                this.state = 'jumpImage';
+                return this.images.jumpImage;
+            } else if (this.isRunning) {
+                this.currentRunIndex += 1;
+                if (this.currentRunIndex >= this.runCycle.length) this.currentRunIndex = 0;
+                this.state = String((this.runCycle[this.currentRunIndex])) /* Erro aqui ao andar */
+                return (this.runCycle[this.currentRunIndex])
+            } else if (this.isOnGround) {
+                this.state = 'idleImage';
+                return this.images.idleImage;
+            } else {
+                this.state = 'fallImage';
+                return this.images.fallImage;
+            }
         } else {
-            this.state = 'fallImage';
-            return this.images.fallImage;
+            switch(this.state) {
+                case 'squatImage':
+                    return this.images.squatImage;
+                case 'fallenImage':
+                    return this.images.fallenImage;
+                case 'oofImage':
+                    return this.images.oofImage;
+                case 'jumpImage':
+                    return this.images.jumpImage;
+                case 'runCycle1':
+                    return this.images.runCycle1;
+                case 'runCycle2':
+                    return this.images.runCycle2;
+                case 'runCycle3':
+                    return this.images.runCycle3;
+                case 'idleImage':
+                    return this.images.idleImage;
+                default:
+                    return this.images.fallImage;
+            }
         }
+
+        
     }
 
     UpdatePlayerSlide(currentLines) {

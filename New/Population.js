@@ -20,11 +20,34 @@ class Population {
     addPlayer(player) {
         this.players.push(player);
     }
+
+    appendPlayer(playerInfo) {
+        let player = new Player(playerInfo.nick, screen.player.images, screen.player.sounds, false);
+        player.currentPos = createVector(playerInfo.x, playerInfo.y);
+        player.currentLevelNo = playerInfo.level;
+        player.numMultiplayer = playerInfo.num;
+        player.isClone = true;
+        this.players.push(player);
+    }
+
+    appendAllPlayers(players) {
+        players.forEach(
+            player => {
+                this.appendPlayer(player);
+            }
+        )
+    }
     // Atualizar todos os jogadores
     Update() {
-        for (let i = 0; i < this.players.length; i++) {
-            this.players[i].Update();
-        }
+        this.players.forEach(
+            player => {
+                if (player.numMultiplayer != 0) {
+                    player.Update(screen.levels);
+                    player.setImgPlayer(screen.levels);
+                }
+
+            }
+        );
 
     }
 
