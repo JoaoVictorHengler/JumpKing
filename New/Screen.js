@@ -1856,14 +1856,18 @@ class Screen {
 
     async draw() {
         background(10);
+
+
         push()
         translate(0, 50);
-        if (!this.player.isClone) {
-            image(this.levels[this.player.currentLevelNo].levelImage, 0, 0)
-            this.levels[this.player.currentLevelNo].show(this.showLines, this.showCoins);
-            this.player.Update(this.levels);
-            this.player.Show(this.levels);
-        }
+        
+        image(this.levels[this.player.currentLevelNo].levelImage, 0, 0)
+        this.levels[this.player.currentLevelNo].show(this.showLines, this.showCoins);
+        this.player.Update(this.levels, this.height);
+        this.player.Show(this.levels, this.width, this.player);
+        /* if (!this.player.isClone) {
+            
+        } */
 
         if (frameCount % 15 === 0) {
             previousFrameRate = floor(getFrameRate())
@@ -1874,7 +1878,7 @@ class Screen {
 
         fill(0);
         noStroke();
-        /* rect(0, 0, this.width, 50); */
+        rect(0, 0, this.width, 50);
     }
 
     /* Criar Movimentação f:keyPressed() e f:keyReleased() */
@@ -1912,7 +1916,7 @@ class Screen {
             case ' ':
     
                 this.player.jumpHeld = false
-                this.player.Jump()
+                this.player.Jump(this.height)
                 break;
 
             case 'N':

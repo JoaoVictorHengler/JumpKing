@@ -201,7 +201,7 @@ function draw() {
     //
     //     levelNumber  = (levelNumber +1)%43;
     // }
-    // image(backgroundImage,0,0);
+    /* image(backgroundImage,0,0); */
     // if (!creatingLines) {
 
     //     if (!placingPlayer || playerPlaced) {
