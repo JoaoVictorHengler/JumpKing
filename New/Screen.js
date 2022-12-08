@@ -124,7 +124,7 @@ class Screen {
 
     createPopulation() {
         this.population = new Population();
-        this.population.addPlayer(this.player);
+        /* this.population.addPlayer(this.player); */
     }
 
     setupLevels() {
@@ -194,12 +194,13 @@ class Screen {
         this.levels[this.player.currentLevelNo].show(this.showLines, this.showCoins);
         this.player.Update(this.levels);
         this.player.setImgPlayer(this.levels);
-        this.population.Update();
+        /* this.population.Update(); Problema aqui */
 
         if (frameCount % 15 === 0) {
             this.previousFrameRate = floor(getFrameRate())
         }
         pop();
+        
     }
 
     /* Criar Movimentação f:keyPressed() e f:keyReleased() */
@@ -339,12 +340,21 @@ class Screen {
     multiplayerReceiver() {
         this.connection.onmessage = (message) => {
             let msg = JSON.parse(message.data);
+            if (msg.type != "updatePlayer") {
+                console.log("Mensagem recebida: " + msg.type);
+                console.log(msg);
+            }
+            
             switch (msg.type) {
                 case "createPlayer":
-                    console.log(msg.data)
                     this.population.appendPlayer(msg.data)
+                    break;
                 case "createAllPlayers":
+                    this.player.numMultiplayer = msg.yourNum;
                     this.population.appendAllPlayers(msg.data)
+                    break;
+                case "updatePlayer":
+                    this.population.updatePlayers(msg.data)
             }
         }
     }

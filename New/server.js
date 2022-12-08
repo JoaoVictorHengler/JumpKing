@@ -131,6 +131,7 @@ function createPlayer(playerData, connection) {
             } else {
                 player.connection.send(JSON.stringify({
                     type: "createAllPlayers",
+                    yourNum: playerNum,
                     data: playersList
                 }));
             }
@@ -142,7 +143,7 @@ function createPlayer(playerData, connection) {
 }
 
 function updatePlayer(ws, data) {
-    let thisPlayer;
+    let allPlayers = [];
     for (let i = 0; i < players.length; i++) {
         if (players[i].connection == ws) {
             players[i].player.x = data.x;
@@ -154,15 +155,20 @@ function updatePlayer(ws, data) {
             break;
         }
     }
-    data.num = thisPlayer.num;
+    
     players.forEach(
         player => {
-            if (player.connection != ws) {
-                player.connection.send(JSON.stringify({
-                    type: "updatePlayer",
-                    data: data
-                }));
-            }
+            allPlayers.push(player.player);
         }
     )
+
+    players.forEach(
+        player => {
+            player.connection.send(JSON.stringify({
+                type: "updatePlayer",
+                data: allPlayers
+            }));
+        }
+    )
+    
 }

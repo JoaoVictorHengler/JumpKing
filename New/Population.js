@@ -22,18 +22,25 @@ class Population {
     }
 
     appendPlayer(playerInfo) {
-        let player = new Player(playerInfo.nick, screen.player.images, screen.player.sounds, false);
-        player.currentPos = createVector(playerInfo.x, playerInfo.y);
-        player.currentLevelNo = playerInfo.level;
-        player.numMultiplayer = playerInfo.num;
-        player.isClone = true;
-        this.players.push(player);
+        if (playerInfo.num != screen.player.numMultiplayer) {
+            let player = new Player(playerInfo.nick, screen.player.images, screen.player.sounds, false);
+            player.currentPos = createVector(playerInfo.x, playerInfo.y);
+            player.currentLevelNo = playerInfo.level;
+            player.numMultiplayer = playerInfo.num;
+            player.isClone = true;
+            player.state = playerInfo.state;
+            player.currentSpeedY = playerInfo.currentSpeedY;
+            this.players.push(player);
+        }
     }
 
     appendAllPlayers(players) {
         players.forEach(
             player => {
-                this.appendPlayer(player);
+                if (player.numMultiplayer != screen.player.numMultiplayer) {
+                    this.appendPlayer(player);
+                }
+                
             }
         )
     }
@@ -41,7 +48,7 @@ class Population {
     Update() {
         this.players.forEach(
             player => {
-                if (player.numMultiplayer != 0) {
+                if (player.numMultiplayer != screen.player.numMultiplayer) {
                     player.Update(screen.levels);
                     player.setImgPlayer(screen.levels);
                 }
@@ -49,6 +56,24 @@ class Population {
             }
         );
 
+    }
+
+    updatePlayers(playersInfo) {
+        playersInfo.forEach(
+            playerInfo => {
+                if (playerInfo.num != screen.player.numMultiplayer) {
+                    let player = this.players.find(player => player.numMultiplayer == playerInfo.num);
+
+                    if (player != null) {
+                        player.currentPos = createVector(playerInfo.x, playerInfo.y);
+                        player.currentLevelNo = playerInfo.level;
+                        player.state = playerInfo.state;
+                        player.currentSpeedY = playerInfo.currentSpeedY;
+                    }
+                }
+                
+            }
+        )
     }
 
     SetBestPlayer() {
