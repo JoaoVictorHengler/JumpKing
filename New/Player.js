@@ -198,8 +198,6 @@ class Player {
         
         this.isSinglePlayer = isSinglePlayer;
 
-        this.hasFinishedInstructions = false;
-        this.fellToPreviousLevel = false;
         this.fellOnActionNo = 0;
         
         this.getNewPlayerStateAtEndOfUpdate = false;
@@ -214,6 +212,8 @@ class Player {
 
         this.progressionCoinPickedUp = false;
         this.state = 'idleImage';
+
+        this.stopSounds = false;
 
     }
 
@@ -254,7 +254,6 @@ class Player {
         this.bestHeightReached = 0;
         this.reachedHeightAtStepNo = 0;
 
-        this.hasFinishedInstructions = false;
 
 
     }
@@ -389,8 +388,10 @@ class Player {
                 // ok we gonna need to snap this shit
                 this.currentPos.y = chosenLine.y1;
                 if (!this.isClone) {
-                    this.sounds.bumpSound.playMode('sustain');
-                    this.sounds.bumpSound.play();
+                    if (!this.stopSounds) {
+                        this.sounds.bumpSound.playMode('sustain');
+                        this.sounds.bumpSound.play();
+                    }
                 }
 
             }
@@ -417,8 +418,10 @@ class Player {
             if (!this.isOnGround) {
                 this.hasBumped = true;
                 if (!this.isClone) {
-                    this.sounds.bumpSound.playMode('sustain');
-                    this.sounds.bumpSound.play();
+                    if (!this.stopSounds) {
+                        this.sounds.bumpSound.playMode('sustain');
+                        this.sounds.bumpSound.play();
+                    }
                 }
             }
         } else {
@@ -550,11 +553,9 @@ class Player {
         if (collidedLines.length > 1) {
             // print(chosenLine)
             this.currentNumberOfCollisionChecks += 1;
-            if (this.currentNumberOfCollisionChecks > this.maxCollisionChecks) {
-                this.hasFinishedInstructions = true;
+            if (!(this.currentNumberOfCollisionChecks > this.maxCollisionChecks)) {
+                this.CheckCollisions(currentLines, levels);
 
-            } else {
-                this.CheckCollisions(currentLines);
             }
 
             //ok so this is gonna need some splaining.
@@ -562,7 +563,7 @@ class Player {
             // just incase the corrections have moved him off the surface
             if (potentialLanding) {
                 if (this.IsPlayerOnGround(currentLines)) {
-                    this.playerLanded();
+                    this.playerLanded(levels);
                 }
 
             }
@@ -573,14 +574,14 @@ class Player {
         return (this.bestHeightReached - (height * this.bestLevelReached));
     }
     // Mostrar Jogador
-    async setImgPlayer(levels) {
-        translate(this.currentPos.x, this.currentPos.y);
+    async Show(levels) {
         push();
-
+        
         let imageToUse = await this.GetImageToUseBasedOnState();
-
+        
+        translate(this.currentPos.x, this.currentPos.y);
         if (!this.facingRight) {
-            push()
+            //push()
             scale(-1, 1);
             if (this.hasBumped) {
                 image(imageToUse, -70, -30);
@@ -589,7 +590,7 @@ class Player {
             } else {
                 image(imageToUse, -70, -35);
             }
-            pop()
+            //pop()
         } else {
 
             if (this.hasBumped) {
@@ -655,8 +656,10 @@ class Player {
         this.jumpTimer = 0
         this.jumpStartingHeight = (height - this.currentPos.y) + height * this.currentLevelNo;
         if (!this.isClone) {
-            this.sounds.jumpSound.playMode('sustain');
-            this.sounds.jumpSound.play();
+            if (!this.stopSounds) {
+                this.sounds.jumpSound.playMode('sustain');
+                this.sounds.jumpSound.play();
+            }
         }
     }
     // Colisão
@@ -762,7 +765,7 @@ class Player {
             } else if (this.isRunning) {
                 this.currentRunIndex += 1;
                 if (this.currentRunIndex >= this.runCycle.length) this.currentRunIndex = 0;
-                this.state = String((this.runCycle[this.currentRunIndex])) /* Erro aqui ao andar */
+                this.state = `runCycle${this.currentRunIndex}` /* Erro aqui ao andar */
                 return (this.runCycle[this.currentRunIndex])
             } else if (this.isOnGround) {
                 this.state = 'idleImage';
@@ -772,6 +775,12 @@ class Player {
                 return this.images.fallImage;
             }
         } else {
+            if (this.state.indexOf("runCycle") > -1) {
+                this.currentRunIndex = parseInt(this.state.split("runCycle")[1]);
+                if (this.currentRunIndex >= this.runCycle.length) this.currentRunIndex = 0;
+                return (this.runCycle[this.currentRunIndex])
+            }
+                
             switch(this.state) {
                 case 'squatImage':
                     return this.images.squatImage;
@@ -781,12 +790,6 @@ class Player {
                     return this.images.oofImage;
                 case 'jumpImage':
                     return this.images.jumpImage;
-                case 'runCycle1':
-                    return this.images.runCycle1;
-                case 'runCycle2':
-                    return this.images.runCycle2;
-                case 'runCycle3':
-                    return this.images.runCycle3;
                 case 'idleImage':
                     return this.images.idleImage;
                 default:
@@ -1095,7 +1098,7 @@ class Player {
     }
 
     CheckForLevelChange() {
-        if (this.currentPos.y < -this.height) {
+        if (this.currentPos.y < -this.height * 2) {
             //we are at the top of the screen
             this.currentLevelNo += 1;
             this.currentPos.y += height;
@@ -1106,15 +1109,10 @@ class Player {
                 //oh no
                 // print("fuck me hes goin under")
                 this.currentLevelNo = 1; //lol fixed
-                this.hasFinishedInstructions = true;
+
             }
             this.currentLevelNo -= 1;
             this.currentPos.y -= height;
-
-            if (!this.hasFinishedInstructions && this.currentLevelNo < this.bestLevelReached - 1) {
-                this.fellToPreviousLevel = true;
-                this.hasFinishedInstructions = true;
-            }
 
         }
 
@@ -1201,20 +1199,15 @@ class Player {
 
         }
 
-        // if the ai fell to a previous level then stop the actions and record when it happened
-        if (this.currentLevelNo < this.bestLevelReached && this.currentLevelNo !== 23 && !this.hasFinishedInstructions) {
-            this.fellToPreviousLevel = true;
-            this.hasFinishedInstructions = true;
-
-        }
-
         if (!this.isClone) {
-            if (this.hasFallen) {
-                this.sounds.fallSound.playMode('sustain');
-                this.sounds.fallSound.play();
-            } else {
-                this.sounds.landSound.playMode('sustain');
-                this.sounds.landSound.play();
+            if (!this.stopSounds) {
+                if (this.hasFallen) {
+                    this.sounds.fallSound.playMode('sustain');
+                    this.sounds.fallSound.play();
+                } else {
+                    this.sounds.landSound.playMode('sustain');
+                    this.sounds.landSound.play();
+                }
             }
         }
     }

@@ -103,13 +103,18 @@ wss.on("connection", ws => {
 });
 
 function createPlayer(playerData, connection) {
-    let playerNum = Math.floor(Math.random() * 50);
+    let playerNum
+    while (true) {
+        playerNum = Math.floor(Math.random() * 50)
+        let player = players.find(player => player.num == playerNum)
+        if (!player) {
+            break;
+        }
+    }
+    ;
     let playersList = [];
     players.forEach(
         player => {
-            if (playerNum == player.num) {
-                playerNum = Math.floor(Math.random() * 50);
-            }
             playersList.push(player.player);
         }
     )
@@ -138,8 +143,8 @@ function createPlayer(playerData, connection) {
             
         }
     )
-    console.log("Enviado para todos os players");
-    console.log(playerData)
+    /* console.log("Enviado para todos os players");
+    console.log(playerData) */
 }
 
 function updatePlayer(ws, data) {
@@ -151,6 +156,8 @@ function updatePlayer(ws, data) {
             players[i].player.level = data.level;
             players[i].player.state = data.state;
             players[i].player.currentSpeedY = data.currentSpeedY;
+            players[i].player.facingRight = data.facingRight;
+            players[i].player.hasBumped = data.hasBumped;
             thisPlayer = players[i].player;
             break;
         }

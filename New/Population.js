@@ -30,6 +30,8 @@ class Population {
             player.isClone = true;
             player.state = playerInfo.state;
             player.currentSpeedY = playerInfo.currentSpeedY;
+            player.facingRight = playerInfo.facingRight;
+            player.hasBumped = playerInfo.hasBumped;
             this.players.push(player);
         }
     }
@@ -48,9 +50,9 @@ class Population {
     Update() {
         this.players.forEach(
             player => {
-                if (player.numMultiplayer != screen.player.numMultiplayer) {
+                if (player.isClone && player.currentLevelNo == screen.player.currentLevelNo) {
                     player.Update(screen.levels);
-                    player.setImgPlayer(screen.levels);
+                    player.Show(screen.levels);
                 }
 
             }
@@ -69,6 +71,8 @@ class Population {
                         player.currentLevelNo = playerInfo.level;
                         player.state = playerInfo.state;
                         player.currentSpeedY = playerInfo.currentSpeedY;
+                        player.facingRight = playerInfo.facingRight;
+                        player.hasBumped = playerInfo.hasBumped;
                     }
                 }
                 

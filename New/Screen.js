@@ -7,7 +7,7 @@ class Screen {
 
         /* Levels */
 
-        this.showLines = true;
+        this.showLines = false;
 
         this.activateCoins = false;
         this.showCoins = false;
@@ -45,7 +45,7 @@ class Screen {
         this.levels = [];
 
         this.previousFrameRate = 60;
-
+        this.showFPS = false;
         /* Multiplayer */
 
         this.connection;
@@ -101,7 +101,7 @@ class Screen {
             run2Image: this.images.run2Image,
             run3Image: this.images.run3Image,
             fallImage: this.images.fallImage,
-
+            fallenImage: this.images.fallenImage,
         }, {
             fallSound: this.sounds.fallSound,
             jumpSound: this.sounds.jumpSound,
@@ -117,6 +117,8 @@ class Screen {
             level: this.player.currentLevelNo,
             state: this.player.state,
             currentSpeedY: this.player.currentSpeed.y,
+            facingRight: this.player.facingRight,
+            hasBumped: this.player.hasBumped,
         });
 
 
@@ -180,58 +182,61 @@ class Screen {
     async draw() {
         background(10);
 
-        fill(0);
 
 
-        fill(255, 255, 255);
-        textSize(32);
-        text('FPS: ' + this.previousFrameRate, width - 160, 35);
-
+        
+        
         push()
-        translate(0, 50);
+        /* translate(0, 10); */
 
         image(this.levels[this.player.currentLevelNo].levelImage, 0, 0)
         this.levels[this.player.currentLevelNo].show(this.showLines, this.showCoins);
         this.player.Update(this.levels);
-        this.player.setImgPlayer(this.levels);
-        /* this.population.Update(); Problema aqui */
-
+        this.player.Show(this.levels);
+        
+        this.population.Update();
+        
         if (frameCount % 15 === 0) {
             this.previousFrameRate = floor(getFrameRate())
         }
         pop();
+        if (this.showFPS) {
+            fill(255, 255, 255);
+            textSize(32);
+            text('FPS: ' + this.previousFrameRate, width - 160, 35);
+        }
         
     }
 
     /* Criar Movimentação f:keyPressed() e f:keyReleased() */
-    keyPressed(key) {
+    keyPressed() {
         switch (key) {
             case ' ':
                 this.player.jumpHeld = true
                 break;
             case 'S':
-                this.player.bumpSound.stop();
-                this.player.jumpSound.stop();
-                this.player.landSound.stop();
-                this.player.fallSound.stop();
+                this.player.stopSounds = !this.player.stopSounds;
+                break;
+            case 'F':
+                this.showFPS = !this.showFPS;
+                break;
+            case 'L':
+                this.showLines = !this.showLines;
                 break;
         }
 
         switch (keyCode) {
             case LEFT_ARROW:
-                console.log("Personagem andando para o lado esquerdo")
-
                 this.player.leftHeld = true;
                 break;
             case RIGHT_ARROW:
-                console.log("Personagem andando para o lado direito")
                 this.player.rightHeld = true;
                 break;
         }
 
     }
 
-    keyReleased(key, keyCode) {
+    keyReleased() {
 
         switch (key) {
 
@@ -245,12 +250,6 @@ class Screen {
                 player.currentLevelNo += 1;
 
                 break;
-            case 'D':
-                if (creatingLines) {
-
-                    mousePos1 = null;
-                    mousePos2 = null;
-                }
         }
 
         switch (keyCode) {
@@ -333,6 +332,9 @@ class Screen {
                 y: this.player.currentPos.y,
                 state: this.player.state,
                 currentSpeedY: this.player.currentSpeed.y,
+                facingRight: this.player.facingRight,
+                hasBumped: this.player.hasBumped,
+                
             }
         )
     }
