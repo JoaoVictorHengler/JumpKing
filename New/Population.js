@@ -47,7 +47,7 @@ class Population {
         )
     }
     // Atualizar todos os jogadores
-    Update() {
+    Show() {
         this.players.forEach(
             player => {
                 if (player.isClone && player.currentLevelNo == screen.player.currentLevelNo) {
@@ -60,7 +60,7 @@ class Population {
 
     }
 
-    updatePlayers(playersInfo) {
+    update(playersInfo) {
         playersInfo.forEach(
             playerInfo => {
                 if (playerInfo.num != screen.player.numMultiplayer) {
@@ -80,50 +80,11 @@ class Population {
         )
     }
 
-    SetBestPlayer() {
-        this.bestPlayerIndex = 0;
-        this.newLevelReached = false;
-
-        if (this.players[this.bestPlayerIndex].bestLevelReached > this.currentBestLevelReached) {
-            this.currentBestLevelReached = this.players[this.bestPlayerIndex].bestLevelReached;
-            this.newLevelReached = true;
-            this.reachedBestLevelAtActionNo = this.players[this.bestPlayerIndex].bestLevelReachedOnActionNo;
-            print("NEW LEVEL, action number", this.reachedBestLevelAtActionNo)
-            //this.showingLevelNo++;
-        }
-        /* console.log(this.players[this.bestPlayerIndex].currentPos.y) */
-    }
-    // Setar maior player
-    SetCurrentHighestPlayer() {
-        this.currentHighestPlayerIndex = 0;
-        for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i].GetGlobalHeight() > this.players[this.currentHighestPlayerIndex].GetGlobalHeight()) {
-                this.currentHighestPlayerIndex = i;
-            }
+    removePlayer(num) {
+        let player = this.players.find(player => player.numMultiplayer == num);
+        if (player != null) {
+            this.players.splice(this.players.indexOf(player), 1);
         }
     }
-
-    Show() {
-
-        this.SetCurrentHighestPlayer()
-        let highestPlayer = this.players[this.currentHighestPlayerIndex];
-        let highestLevelNo = this.players[this.currentHighestPlayerIndex].currentLevelNo;
-
-        if(highestPlayer.currentLevelNo > highestPlayer.bestLevelReached && !highestPlayer.progressionCoinPickedUp){
-            highestLevelNo -=1;
-        }
-        showLevel(highestLevelNo);
-        alreadyShowingSnow = false;
-        this.showingLevelNo = highestLevelNo;
-        for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i].currentLevelNo >= highestLevelNo - 1 && this.players[i].currentLevelNo <=highestLevelNo ) {
-                this.players[i].Show();
-            }
-        }
-
-        // this.ShowPopulationInfo();
-
-    }
-
 
 }

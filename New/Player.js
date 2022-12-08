@@ -101,33 +101,7 @@ class PlayerState {
         // player.actionStarted = this.actionStarted;
     }
     // Clone
-    clone() {
-        let clone = new PlayerState();
-        clone.currentPos = this.currentPos.copy();
-        clone.currentSpeed = this.currentSpeed.copy();
-        clone.isOnGround = this.isOnGround
 
-
-        clone.blizzardForce = this.blizzardForce;
-        clone.blizzardForceAccelerationDirection = this.blizzardForceAccelerationDirection;
-        clone.maxBlizzardForceTimer = this.maxBlizzardForceTimer;
-        clone.snowImagePosition = this.snowImagePosition;
-
-
-        clone.bestHeightReached = this.bestHeightReached;
-        clone.bestLevelReached = this.bestLevelReached;
-        clone.reachedHeightAtStepNo = this.reachedHeightAtStepNo;
-        clone.bestLevelReachedOnActionNo = this.bestLevelReachedOnActionNo;
-
-        clone.currentLevelNo = this.currentLevelNo;
-        clone.jumpStartingHeight = this.jumpStartingHeight;
-        clone.facingRight = this.facingRight;
-
-
-        // clone.isWaitingToStartAction = this.isWaitingToStartAction;
-        // clone.actionStarted = this.actionStarted;
-        return clone;
-    }
 }
 
 class Player {
@@ -257,12 +231,7 @@ class Player {
 
 
     }
-    // Clone do Jogador
-    clone() {
-        let clone = new Player();
-        clone.playerStateAtStartOfBestLevel = this.playerStateAtStartOfBestLevel.clone();
-        return clone;
-    }
+
     // Começar a carregar o melhor estado do player
     loadStartOfBestLevelPlayerState() {
         this.playerStateAtStartOfBestLevel.loadStateToPlayer(this);
@@ -602,6 +571,7 @@ class Player {
             }
 
         }
+        
 
         /* 
             Player Hitbox
@@ -614,7 +584,18 @@ class Player {
         */
 
         pop();
-        if (levels[this.currentLevelNo].isBlizzardLevel && (!alreadyShowingSnow || this.isSinglePlayer)) {
+        
+        fill(255, 255, 255);
+        textSize(32);
+
+        let nickWidth = textWidth(this.nick);
+        if (nickWidth < 100) {
+            text(this.nick, this.currentPos.x - (nickWidth / 15), this.currentPos.y - this.height + 50);
+        } else {
+            text(this.nick, this.currentPos.x - (nickWidth / 3), this.currentPos.y - this.height + 50);
+        }
+        
+        if (screen.alreadyShowingSnow) {
 
             let snowDrawPosition = this.snowImagePosition;
             while (snowDrawPosition <= 0) {
@@ -623,11 +604,10 @@ class Player {
             snowDrawPosition = snowDrawPosition % width;
 
             // let snowYPosition = (frameCount/2) % height;
-            image(snowImage, snowDrawPosition, 0);
-            image(snowImage, snowDrawPosition - width, 0);
+            image(this.images.snowImage, snowDrawPosition, 0);
+            image(this.images.snowImage, snowDrawPosition - width, 0);
             // image(snowImage, snowDrawPosition, snowYPosition- height);
             // image(snowImage, snowDrawPosition - width, snowYPosition- height);
-            alreadyShowingSnow = true;
         }
     }
 

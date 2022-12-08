@@ -18,6 +18,7 @@ for (const name of Object.keys(nets)) {
     }
 }
 
+
 const server = http.listen(porta, ip, function () {
     const portaStr = porta === 80 ? '' : ':' + porta
 
@@ -36,14 +37,6 @@ app.get('/Coin.js', (req, res) => {
 })
 app.get('/Level.js', (req, res) => {
     res.sendFile(__dirname + '/Level.js');
-    /*res.sendFile(__dirname + '/LevelSetupFunction.js');
-    res.sendFile(__dirname + '/Line.js');
-    res.sendFile(__dirname + '/p5.dom.js');
-    res.sendFile(__dirname + '/p5.js');
-    res.sendFile(__dirname + '/p5.sound.js');
-    res.sendFile(__dirname + '/Player.js');
-    res.sendFile(__dirname + '/Population.js');
-    res.sendFile(__dirname + '/sketch.js'); */
 })
 
 app.get('/Line.js', (req, res) => {
@@ -107,6 +100,19 @@ wss.on("connection", ws => {
     // handling what to do when clients disconnects from server
     ws.on("close", () => {
         console.log("Conexão Fechada.");
+        let player = players.find(player => player.connection == ws);
+        let removedPlaver = player.player.num
+        players.splice(players.indexOf(player), 1);
+        console.log(players.length)
+        players.forEach(
+            (player, i) => {
+                player.connection.send(JSON.stringify({
+                    'type': 'removePlayer',
+                    'data': {'playerNum': removedPlaver}
+                }));
+                    
+            }
+        )
     });
     // handling client connection error
     ws.onerror = function () {

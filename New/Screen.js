@@ -15,7 +15,7 @@ class Screen {
         /* Sobre o jogo */
 
         this.isSinglePlayer = false;
-
+        this.alreadyShowingSnow = false;
         this.images = {
             idleImage: null,
             squatImage: null,
@@ -91,7 +91,7 @@ class Screen {
 
     }
 
-    async createPlayer(nickPlayer="João") {
+    async createPlayer(nickPlayer="Desconhecido") {
         this.player = new Player(nickPlayer, {
             idleImage: this.images.idleImage,
             squatImage: this.images.squatImage,
@@ -102,6 +102,7 @@ class Screen {
             run3Image: this.images.run3Image,
             fallImage: this.images.fallImage,
             fallenImage: this.images.fallenImage,
+            snowImage: this.images.snowImage,
         }, {
             fallSound: this.sounds.fallSound,
             jumpSound: this.sounds.jumpSound,
@@ -109,24 +110,25 @@ class Screen {
             landSound: this.sounds.landSound,
         }, this.isSinglePlayer);
         console.log("Jogador Criado.");
-
-        await this.sendInformation("createPlayer", {
-            nick: this.player.nick,
-            x: this.player.currentPos.x,
-            y: this.player.currentPos.y,
-            level: this.player.currentLevelNo,
-            state: this.player.state,
-            currentSpeedY: this.player.currentSpeed.y,
-            facingRight: this.player.facingRight,
-            hasBumped: this.player.hasBumped,
-        });
+        if (!this.isSinglePlayer) {
+            await this.sendInformation("createPlayer", {
+                nick: this.player.nick,
+                x: this.player.currentPos.x,
+                y: this.player.currentPos.y,
+                level: this.player.currentLevelNo,
+                state: this.player.state,
+                currentSpeedY: this.player.currentSpeed.y,
+                facingRight: this.player.facingRight,
+                hasBumped: this.player.hasBumped,
+            });
+        }
+        
 
 
     }
 
     createPopulation() {
         this.population = new Population();
-        /* this.population.addPlayer(this.player); */
     }
 
     setupLevels() {
@@ -180,21 +182,23 @@ class Screen {
 
 
     async draw() {
+        if (this.levels[this.player.currentLevelNo].isBlizzardLevel) {
+            this.alreadyShowingSnow = true;
+        } else {
+            this.alreadyShowingSnow = false;
+        }
+
         background(10);
 
-
-
-        
-        
         push()
-        /* translate(0, 10); */
+
 
         image(this.levels[this.player.currentLevelNo].levelImage, 0, 0)
         this.levels[this.player.currentLevelNo].show(this.showLines, this.showCoins);
         this.player.Update(this.levels);
         this.player.Show(this.levels);
         
-        this.population.Update();
+        if (!this.isSinglePlayer) this.population.Show();
         
         if (frameCount % 15 === 0) {
             this.previousFrameRate = floor(getFrameRate())
@@ -247,7 +251,7 @@ class Screen {
                 break;
 
             case 'N':
-                player.currentLevelNo += 1;
+                this.player.currentLevelNo += 1;
 
                 break;
         }
@@ -293,34 +297,42 @@ class Screen {
 
     async setupConnection() {
         let nickPlayer;
-        /* swal.fire({
+        swal.fire({
                 text: "Digite o seu nick:",
                 input: 'text',
-                Colocar botão para selecionar o modo de jogo (single ou multi)
                 inputPlaceholder: 'Nick do usuário',
                 confirmButtonText: 'Multiplayer',
-                cancelButtonText: 'Single Player',
+                cancelButtonText: 'Singleplayer',
                 showConfirmButton: true,
                 showCancelButton: true,
                 allowOutsideClick:false
             }).then(
-                (result) => {
+                async (result) => {
                     if (result.isConfirmed & result.value != "") {
                         nickPlayer = result.value;
                     } else if (result.isCancelled) {
                         this.isSinglePlayer = true;
                     }
+                    if (this.isSinglePlayer) {
+                        await screen.createPlayer(nickPlayer);
+                        await screen.setupLevels();
+                        await screen.setPlayModeSounds();
+                        canStart = true
+                    } else {
+                        await this.connectWs();
+                        this.connection.onopen = async () => {
+                            this.multiplayerReceiver();
+                            await screen.createPlayer(nickPlayer);
+                            await screen.createPopulation();
+                            await screen.setupLevels();
+                            await screen.setPlayModeSounds();
+                            canStart = true;
+                        }
+                    }
                 }
-        ); */
-        await this.connectWs();
-        this.connection.onopen = async () => {
-            this.multiplayerReceiver();
-            await screen.createPlayer(/* nickPlayer */);
-            await screen.createPopulation();
-            await screen.setupLevels();
-            await screen.setPlayModeSounds();
-            canStart = true;
-        }
+        );
+        
+        
     }
 
     updateInformationServer() {
@@ -349,14 +361,17 @@ class Screen {
             
             switch (msg.type) {
                 case "createPlayer":
-                    this.population.appendPlayer(msg.data)
+                    this.population.appendPlayer(msg.data);
                     break;
                 case "createAllPlayers":
                     this.player.numMultiplayer = msg.yourNum;
-                    this.population.appendAllPlayers(msg.data)
+                    this.population.appendAllPlayers(msg.data);
                     break;
                 case "updatePlayer":
-                    this.population.updatePlayers(msg.data)
+                    this.population.update(msg.data);
+                    break;
+                case "removePlayer":
+                    this.population.removePlayer(msg.data.playerNum);
             }
         }
     }
