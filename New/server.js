@@ -1,4 +1,6 @@
 const express = require('express')
+const { networkInterfaces } = require('os');
+
 const app = express()
 
 app.use(express.static("public"))
@@ -6,7 +8,17 @@ app.use(express.static("public"))
 const http = require('http').Server(app)
 const porta = process.env.PORT || 8000
 
-const server = http.listen(porta, function () {
+
+const nets = networkInterfaces();
+var ip;
+for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+        const familyV4Value = typeof net.family === 'string' ? 'IPv4' : 4
+        if (net.family === familyV4Value && !net.internal) ip = net.address;
+    }
+}
+
+const server = http.listen(porta, ip, function () {
     const portaStr = porta === 80 ? '' : ':' + porta
 
     console.log('Servidor iniciado. Abra o navegador em ' + portaStr)

@@ -264,7 +264,7 @@ class Screen {
 
     /* Multiplayer */
 
-    async connectWs(link = 'ws://localhost:8000') {
+    async connectWs(link = `ws:/${ip}/8000`) {
 
         try {
             this.connection = await new WebSocket(link);
