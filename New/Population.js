@@ -57,12 +57,11 @@ class Population {
 
             }
         );
-
     }
 
     update(playersInfo) {
         playersInfo.forEach(
-            playerInfo => {
+            (playerInfo, i) => {
                 if (playerInfo.num != screen.player.numMultiplayer) {
                     let player = this.players.find(player => player.numMultiplayer == playerInfo.num);
 
@@ -75,16 +74,20 @@ class Population {
                         player.hasBumped = playerInfo.hasBumped;
                     }
                 }
-                
             }
-        )
+        )       
     }
 
     removePlayer(num) {
         let player = this.players.find(player => player.numMultiplayer == num);
         if (player != null) {
+            
+            document.getElementById("scores").removeChild(
+                document.getElementById(`score-${player.numMultiplayer}`)
+            );
             this.players.splice(this.players.indexOf(player), 1);
         }
+
     }
 
 }

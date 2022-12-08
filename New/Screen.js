@@ -49,6 +49,7 @@ class Screen {
         /* Multiplayer */
 
         this.connection;
+        this.ranking;
     }
 
     async loadScreenResources() {
@@ -91,7 +92,7 @@ class Screen {
 
     }
 
-    async createPlayer(nickPlayer="Desconhecido") {
+    async createPlayer(nickPlayer = "Desconhecido") {
         this.player = new Player(nickPlayer, {
             idleImage: this.images.idleImage,
             squatImage: this.images.squatImage,
@@ -122,7 +123,7 @@ class Screen {
                 hasBumped: this.player.hasBumped,
             });
         }
-        
+
 
 
     }
@@ -180,7 +181,6 @@ class Screen {
         )
     }
 
-
     async draw() {
         if (this.levels[this.player.currentLevelNo].isBlizzardLevel) {
             this.alreadyShowingSnow = true;
@@ -197,9 +197,9 @@ class Screen {
         this.levels[this.player.currentLevelNo].show(this.showLines, this.showCoins);
         this.player.Update(this.levels);
         this.player.Show(this.levels);
-        
+
         if (!this.isSinglePlayer) this.population.Show();
-        
+
         if (frameCount % 15 === 0) {
             this.previousFrameRate = floor(getFrameRate())
         }
@@ -209,7 +209,7 @@ class Screen {
             textSize(32);
             text('FPS: ' + this.previousFrameRate, width - 160, 35);
         }
-        
+
     }
 
     /* Criar Movimentação f:keyPressed() e f:keyReleased() */
@@ -285,7 +285,7 @@ class Screen {
                 showConfirmButton: true,
                 allowOutsideClick: false
             })
-        }
+        };
     }
 
     async sendInformation(type, data) {
@@ -308,31 +308,39 @@ class Screen {
                 allowOutsideClick:false
             }).then(
                 async (result) => {
-                    if (result.isConfirmed & result.value != "") {
-                        nickPlayer = result.value;
-                    } else if (result.isCancelled) {
+                    if (!result.isConfirmed) {
                         this.isSinglePlayer = true;
                     }
+
+                    if (result.value === "") nickPlayer = "Desconhecido";
+                    else  nickPlayer = result.value;
+                    
+
                     if (this.isSinglePlayer) {
-                        await screen.createPlayer(nickPlayer);
-                        await screen.setupLevels();
-                        await screen.setPlayModeSounds();
+                        await this.createPlayer(nickPlayer);
+                        await this.setupLevels();
+                        await this.setPlayModeSounds();
+                        
                         canStart = true
                     } else {
+                        document.getElementById("scores").style.display = "flex";
                         await this.connectWs();
                         this.connection.onopen = async () => {
                             this.multiplayerReceiver();
-                            await screen.createPlayer(nickPlayer);
-                            await screen.createPopulation();
-                            await screen.setupLevels();
-                            await screen.setPlayModeSounds();
+                            await this.createPlayer(nickPlayer);
+                            await this.createPopulation();
+                            await this.setupLevels();
+                            await this.setPlayModeSounds();
+                            this.updateRankingBoard();
                             canStart = true;
                         }
                     }
+                    
                 }
         );
         
-        
+
+
     }
 
     updateInformationServer() {
@@ -346,7 +354,7 @@ class Screen {
                 currentSpeedY: this.player.currentSpeed.y,
                 facingRight: this.player.facingRight,
                 hasBumped: this.player.hasBumped,
-                
+
             }
         )
     }
@@ -358,7 +366,7 @@ class Screen {
                 console.log("Mensagem recebida: " + msg.type);
                 console.log(msg);
             }
-            
+
             switch (msg.type) {
                 case "createPlayer":
                     this.population.appendPlayer(msg.data);
@@ -369,11 +377,60 @@ class Screen {
                     break;
                 case "updatePlayer":
                     this.population.update(msg.data);
+                    this.ranking = msg.scoreBoard;
                     break;
                 case "removePlayer":
                     this.population.removePlayer(msg.data.playerNum);
+                    break;
+
             }
         }
+    }
+
+    updateRankingBoard() {
+        var rankingInterval = setInterval(
+            () => {
+                if (canStart && !this.isSinglePlayer) {
+
+                    this.ranking.forEach(
+                        (playerInfo, i) => {
+                            if (document.getElementById(`score-${playerInfo.num}`) == null) {
+                                let scoresElement = document.getElementById("scores");
+                                let scoreElement = document.createElement("div");
+                                scoreElement.innerHTML = `
+                                            <p class="score__pos">${i + 1}</p>
+                                            <p class="score__nick">${playerInfo.nick}</p>
+                                            <p class="score__level">${playerInfo.level}</p>
+                                        `;
+                                scoreElement.id = `score-${playerInfo.num}`;
+                                scoreElement.className = "score";
+                                scoreElement.style.order = i + 1;
+                                scoreElement.classList.add("w-100", "score", "h5", "fw-light", "m-0");
+                                scoresElement.appendChild(scoreElement);
+                                setTimeout(() => {
+                                    scoreElement.style.transform = `translateY(${40 * (i + 1)}px)`;
+                                }, 1000);
+
+                            } else {
+                                let scoreElement = document.getElementById(`score-${playerInfo.num}`);
+                                scoreElement.style.order = i + 1;
+                                scoreElement.children[0].innerHTML = i + 1;
+                                scoreElement.children[1].innerHTML = playerInfo.nick;
+                                scoreElement.children[2].innerHTML = playerInfo.level;
+                                setTimeout(() => {
+                                    scoreElement.style.transform = `translateY(${40 * (i + 1)}px)`;
+                                }, 1000);
+                            }
+                        });
+
+                } else if (this.isSinglePlayer) {
+                    
+                    clearInterval(rankingInterval);
+                }
+            }, 1000
+        )
+
+
     }
 
     /* Criar Edit Coins f:mouseClicked() */

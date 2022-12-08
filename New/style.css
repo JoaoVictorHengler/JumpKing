@@ -2,6 +2,38 @@ body {
     background-color: rgb(30, 30, 30) !important;
 }
 
+#scores {
+    display: none;
+    position: relative;
+}
 
+.score {
+    border-radius: 3px;
+    display: flex;
+    justify-content: space-evenly;
+    box-sizing: border-box;
+    padding: 5px 0 5px 0;
+    position: absolute;
+}
 
+.score:not(:nth-child(1)) {
+    margin-top: 10px;
+    transform: translateY(4000px);
+    transition: all 1.5s;
+    
+}
+
+.score:not(:last-child, :nth-child(1)) {
+    border-bottom: 0.5px solid white;
+}
   
+.score .score__pos, .score .score__nick, .score .score__level {
+    width: 33%;
+    height: fit-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0px !important;
+    overflow: hidden;
+    
+}

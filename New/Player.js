@@ -1078,7 +1078,7 @@ class Player {
     }
 
     CheckForLevelChange() {
-        if (this.currentPos.y < -this.height * 2) {
+        if (this.currentPos.y < -this.height) {
             //we are at the top of the screen
             this.currentLevelNo += 1;
             this.currentPos.y += height;

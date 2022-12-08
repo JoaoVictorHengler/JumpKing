@@ -103,7 +103,7 @@ wss.on("connection", ws => {
         let player = players.find(player => player.connection == ws);
         let removedPlaver = player.player.num
         players.splice(players.indexOf(player), 1);
-        console.log(players.length)
+        
         players.forEach(
             (player, i) => {
                 player.connection.send(JSON.stringify({
@@ -186,14 +186,30 @@ function updatePlayer(ws, data) {
             allPlayers.push(player.player);
         }
     )
-
+    
     players.forEach(
         player => {
             player.connection.send(JSON.stringify({
                 type: "updatePlayer",
-                data: allPlayers
+                data: allPlayers,
+                scoreBoard: createScoreBoard()
             }));
         }
     )
     
+}
+
+function createScoreBoard() {
+    let scoreBoard = [];
+    players.forEach(
+        player => {
+            scoreBoard.push({
+                nick: player.player.nick,
+                num: player.player.num,
+                level: player.player.level
+            });
+        }
+    )
+    scoreBoard.sort((a, b) => (a.level > b.level) ? -1 : 1)
+    return scoreBoard;
 }
