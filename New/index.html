@@ -10,8 +10,12 @@
 
 <body>
     <div class="d-flex justify-content-center align-items-center w-100 h-100">
-        <div class="w-100 d-flex flex-row justify-content-center" style="height: 900px;">
-            <div id="canvas"></div>
+        <div class="w-100 d-flex flex-row justify-content-center" style="height: 1050px;">
+            <div class="d-flex flex-column" style="height: fit-content;">
+                <div id="canvas"></div>
+                <div class="" id="jump-timer-strength" style="height: 50px; background-color: greenyellow; width: 0%; transition: all 0.1s;">
+                </div>
+            </div>
             <div id="scores" class="w-25 ms-5 p-4 flex-column" style="height: 70%; color: white !important; overflow: hidden;">
                 <div class="w-100 score fw-bold h5 m-0">
                     <p class="score__pos">Posição</p>

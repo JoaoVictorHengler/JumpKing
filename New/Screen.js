@@ -50,6 +50,7 @@ class Screen {
 
         this.connection;
         this.ranking;
+        this.checkPoint = null;
     }
 
     async loadScreenResources() {
@@ -227,6 +228,13 @@ class Screen {
             case 'L':
                 this.showLines = !this.showLines;
                 break;
+            case 'C':
+                this.saveCheckPoint();
+                break;
+            case 'D':
+                this.loadCheckPoint();
+                break;
+
         }
 
         switch (keyCode) {
@@ -250,10 +258,11 @@ class Screen {
                 this.player.Jump()
                 break;
 
-            case 'N':
+            /* case 'N':
                 this.player.currentLevelNo += 1;
 
-                break;
+                break; */
+
         }
 
         switch (keyCode) {
@@ -298,47 +307,47 @@ class Screen {
     async setupConnection() {
         let nickPlayer;
         swal.fire({
-                text: "Digite o seu nick:",
-                input: 'text',
-                inputPlaceholder: 'Nick do usuário',
-                confirmButtonText: 'Multiplayer',
-                cancelButtonText: 'Singleplayer',
-                showConfirmButton: true,
-                showCancelButton: true,
-                allowOutsideClick:false
-            }).then(
-                async (result) => {
-                    if (!result.isConfirmed) {
-                        this.isSinglePlayer = true;
-                    }
+            text: "Digite o seu nick:",
+            input: 'text',
+            inputPlaceholder: 'Nick do usuário',
+            confirmButtonText: 'Multiplayer',
+            cancelButtonText: 'Singleplayer',
+            showConfirmButton: true,
+            showCancelButton: true,
+            allowOutsideClick: false
+        }).then(
+            async (result) => {
+                if (!result.isConfirmed) {
+                    this.isSinglePlayer = true;
+                }
 
-                    if (result.value === "") nickPlayer = "Desconhecido";
-                    else  nickPlayer = result.value;
-                    
+                if (result.value === "") nickPlayer = "Desconhecido";
+                else nickPlayer = result.value;
 
-                    if (this.isSinglePlayer) {
+
+                if (this.isSinglePlayer) {
+                    await this.createPlayer(nickPlayer);
+                    await this.setupLevels();
+                    await this.setPlayModeSounds();
+
+                    canStart = true
+                } else {
+                    document.getElementById("scores").style.display = "flex";
+                    await this.connectWs();
+                    this.connection.onopen = async () => {
+                        this.multiplayerReceiver();
                         await this.createPlayer(nickPlayer);
+                        await this.createPopulation();
                         await this.setupLevels();
                         await this.setPlayModeSounds();
-                        
-                        canStart = true
-                    } else {
-                        document.getElementById("scores").style.display = "flex";
-                        await this.connectWs();
-                        this.connection.onopen = async () => {
-                            this.multiplayerReceiver();
-                            await this.createPlayer(nickPlayer);
-                            await this.createPopulation();
-                            await this.setupLevels();
-                            await this.setPlayModeSounds();
-                            this.updateRankingBoard();
-                            canStart = true;
-                        }
+                        this.updateRankingBoard();
+                        canStart = true;
                     }
-                    
                 }
+
+            }
         );
-        
+
 
 
     }
@@ -424,13 +433,37 @@ class Screen {
                         });
 
                 } else if (this.isSinglePlayer) {
-                    
+
                     clearInterval(rankingInterval);
                 }
             }, 1000
         )
+    }
 
+    saveCheckPoint() {
+        if (!this.player.isOnGround) return;
+        console.log("Salvando checkpoint")
+        this.checkPoint = {
+            level: this.player.currentLevelNo,
+            x: this.player.currentPos.x,
+            y: this.player.currentPos.y,
+            state: this.player.state,
+            currentSpeedY: this.player.currentSpeed.y,
+            facingRight: this.player.facingRight,
+            hasBumped: this.player.hasBumped,
+        }
+    }
 
+    loadCheckPoint() {
+        if (this.checkPoint == null) return;
+        console.log("Carregando checkpoint")
+        this.player.currentLevelNo = this.checkPoint.level;
+        this.player.currentPos.x = this.checkPoint.x;
+        this.player.currentPos.y = this.checkPoint.y;
+        this.player.state = this.checkPoint.state;
+        this.player.currentSpeed.y = this.checkPoint.currentSpeedY;
+        this.player.facingRight = this.checkPoint.facingRight;
+        this.player.hasBumped = this.checkPoint.hasBumped;
     }
 
     /* Criar Edit Coins f:mouseClicked() */

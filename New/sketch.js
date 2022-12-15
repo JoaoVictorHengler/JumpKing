@@ -5,7 +5,7 @@ var ip = window.location.href.split("/")[2];
 
 async function setup() {
     await screen.loadScreenResources();
-    canvas = await screen.setupCanvas(1200, 900);
+    canvas = await screen.setupCanvas(1200, 950);
     await screen.setupConnection();
 }
 

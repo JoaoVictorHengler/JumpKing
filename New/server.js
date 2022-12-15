@@ -19,7 +19,7 @@ for (const name of Object.keys(nets)) {
 }
 
 
-const server = http.listen(porta, ip, function () {
+const server = http.listen(porta, 'localhost', function () {
     const portaStr = porta === 80 ? '' : ':' + porta
 
     console.log('Servidor iniciado. Abra o navegador em ' + portaStr)
@@ -166,7 +166,6 @@ function createPlayer(playerData, connection) {
 }
 
 function updatePlayer(ws, data) {
-    let allPlayers = [];
     for (let i = 0; i < players.length; i++) {
         if (players[i].connection == ws) {
             players[i].player.x = data.x;
@@ -176,27 +175,9 @@ function updatePlayer(ws, data) {
             players[i].player.currentSpeedY = data.currentSpeedY;
             players[i].player.facingRight = data.facingRight;
             players[i].player.hasBumped = data.hasBumped;
-            thisPlayer = players[i].player;
             break;
         }
     }
-    
-    players.forEach(
-        player => {
-            allPlayers.push(player.player);
-        }
-    )
-    
-    players.forEach(
-        player => {
-            player.connection.send(JSON.stringify({
-                type: "updatePlayer",
-                data: allPlayers,
-                scoreBoard: createScoreBoard()
-            }));
-        }
-    )
-    
 }
 
 function createScoreBoard() {
@@ -213,3 +194,27 @@ function createScoreBoard() {
     scoreBoard.sort((a, b) => (a.level > b.level) ? -1 : 1)
     return scoreBoard;
 }
+
+function sendAllPlayers() {
+    let allPlayers = [];
+    players.forEach(
+        player => {
+            allPlayers.push(player.player);
+        }
+    )
+    players.forEach(
+        player => {
+            player.connection.send(JSON.stringify({
+                type: "updatePlayer",
+                data: allPlayers,
+                scoreBoard: createScoreBoard()
+            }));
+        }
+    )
+}
+
+setInterval(
+    () => {
+        sendAllPlayers();
+    }, 1
+)

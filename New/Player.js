@@ -709,7 +709,11 @@ class Player {
     UpdateJumpTimer() {
         if (this.isOnGround && this.jumpHeld && this.jumpTimer < maxJumpTimer) {
             this.jumpTimer += 1
+            
         }
+
+        document.getElementById("jump-timer-strength").style.width = ((this.jumpTimer * 100) / 30) + "%";
+
     }
     // Movendo para Cima
     IsMovingUp() {
