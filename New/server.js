@@ -19,7 +19,7 @@ for (const name of Object.keys(nets)) {
 }
 
 
-const server = http.listen(porta, 'localhost', function () {
+const server = http.listen(porta, ip, function () {
     const portaStr = porta === 80 ? '' : ':' + porta
 
     console.log('Servidor iniciado. Abra o navegador em ' + portaStr)
